@@ -1,49 +1,67 @@
-import { addHinoHarpa, getHinosHarpa, getHinoByNumero, getHinosGeral } from '../services/hinosservices.js';
+import {
+  getHinos,
+  getHinoByNumero,
+  getHinoByIdHinario,
+  getHinosGeral,
+  getHinoGeralById
+} from '../services/hinosservices.js';
 
-export const createHinoHarpa = async (request, response) => {
-  const { numero, titulo, coro, verses } = request.body;
+/* ===== Harpa & CCB ===== */
+
+export const fetchHinos = async (req, res) => {
+  const { hinario } = req.params;
 
   try {
-    const result = await addHinoHarpa(numero, titulo, coro, verses);
-    response.send('Hino added');
+    const hinos = await getHinos(hinario);
+    res.json(hinos);
   } catch (err) {
-    console.error('Error:', err);
-    response.status(500).send('Error inserting hino');
+    res.status(400).json({ message: err.message });
   }
 };
 
-export const fetchAllHinosHarpa = async (request, response) => {
+export const fetchHinoByNumero = async (req, res) => {
+  const { hinario, numero } = req.params;
+
   try {
-    const hinos = await getHinosHarpa();
-    response.json(hinos);
+    const hino = await getHinoByNumero(hinario, Number(numero));
+    if (!hino) return res.status(404).send('Hino não encontrado');
+    res.json(hino);
   } catch (err) {
-    console.error('Error:', err);
-    response.status(500).send('Error fetching hinos');
+    res.status(400).json({ message: err.message });
   }
 };
 
-export const fetchHinoHarpaByNumero = async (request, response) => {
-  const { numero } = request.params;
+export const fetchHinoById = async (req, res) => {
+  const { hinario, id } = req.params;
+
   try {
-    const hino = await getHinoByNumero(numero);
-    if (hino) {
-      response.json(hino);
-    } else {
-      response.status(404).send('Hino not found');
-      console.log(numero, hino)
-    }
+    const hino = await getHinoByIdHinario(hinario, id);
+    if (!hino) return res.status(404).send('Hino não encontrado');
+    res.json(hino);
   } catch (err) {
-    console.error('Error:', err);
-    response.status(500).send('Error fetching hino');
+    res.status(400).json({ message: err.message });
   }
 };
 
-export const fetchHinosGeral = async (request, response) => {
+/* ===== Hinário Geral ===== */
+
+export const fetchHinosGeralController = async (req, res) => {
   try {
-    const hinario = await getHinosGeral();
-    response.json(hinario);
+    const hinos = await getHinosGeral();
+    res.json(hinos);
   } catch (err) {
-    console.error('Error:', err);
-    response.status(500).send('Error fetching hinos');
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const fetchHinoGeralByIdController = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const hino = await getHinoGeralById(id);
+    if (!hino) return res.status(404).send('Hino não encontrado');
+    res.json(hino);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };

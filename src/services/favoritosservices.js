@@ -1,5 +1,5 @@
 import db from '../repository/connection.js';
-import { fetchHinoById, fetchHinoHarpaById } from './dbservices.js';
+import { fetchHinoById, fetchHinoByIdAndHinario } from './dbservices.js';
 
 export const addFavorito = async (id_user, hinoId, tipo_hino) => {
     const conn = await db.connect();
@@ -32,7 +32,7 @@ export const getFavoritos = async (id_user) => {
       for (const row of rows) {
         try {
           if (row.tipo_hino === "Harpa") {
-            const hino = await fetchHinoHarpaById(row.hino_id); // Busca pela função unificada
+            const hino = await fetchHinoByIdAndHinario(row.hino_id); // Busca pela função unificada
             favoritos.push({ ...hino, tipo_hino: "Harpa" });
           } else if (row.tipo_hino === "Geral") {
             const hino = await fetchHinoById(row.hino_id); // Busca pelo hinário geral

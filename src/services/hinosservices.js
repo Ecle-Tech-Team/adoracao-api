@@ -1,17 +1,31 @@
-import { insertHinoHarpa, fetchHinosHarpa, fetchHinoByNumero, fetchHinosGeral } from './dbservices.js';
+import {
+  fetchHinosByHinario,
+  fetchHinoByNumeroAndHinario,
+  fetchHinoByIdAndHinario,
+  fetchHinosGeral,
+  fetchHinoById
+} from './dbservices.js';
 
-export const addHinoHarpa = async (numero, titulo, coro, verses) => {
-  return await insertHinoHarpa(numero, titulo, coro, verses);
+/* ========= HARPAS & CCB ========= */
+
+export const getHinos = (hinario) => {
+  return fetchHinosByHinario(hinario);
 };
 
-export const getHinosHarpa = async () => {
-  return await fetchHinosHarpa();
+export const getHinoByNumero = (hinario, numero) => {
+  return fetchHinoByNumeroAndHinario(hinario, numero);
 };
 
-export const getHinoByNumero = async (numero) => {
-  return await fetchHinoByNumero(numero);
+export const getHinoByIdHinario = (hinario, id) => {
+  return fetchHinoByIdAndHinario(hinario, id);
 };
 
-export const getHinosGeral = async () => {
-  return await fetchHinosGeral();
+/* ========= HINÁRIO GERAL ========= */
+
+export const getHinosGeral = () => {
+  return fetchHinosGeral();
+};
+
+export const getHinoGeralById = (id) => {
+  return fetchHinoById(id);
 };

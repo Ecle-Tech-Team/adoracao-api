@@ -1,22 +1,39 @@
-import express from 'express'
+import express from 'express';
+
 import loginUser from './controllers/logincontroller.js';
-import routerUser from "./controllers/usercontroller.js";
-import { createHinoHarpa, fetchAllHinosHarpa, fetchHinoHarpaByNumero, fetchHinosGeral } from './controllers/hinoscontroller.js';
-import grupoController from "./controllers/grupocontroller.js";
+import routerUser from './controllers/usercontroller.js';
+import grupoController from './controllers/grupocontroller.js';
 import ensaioRouter from './controllers/ensaioscontroller.js';
 import eventoRouter from './controllers/eventoscontroller.js';
 import favoritosRouter from './controllers/favoritoscontroller.js';
 
-const routes = express.Router()
+import {
+  fetchHinos,
+  fetchHinoByNumero,
+  fetchHinoById,
+  fetchHinosGeralController,
+  fetchHinoGeralByIdController
+} from './controllers/hinoscontroller.js';
+
+const routes = express.Router();
+
+/* 🔐 Auth & users */
 routes.use('/login', loginUser);
 routes.use('/user', routerUser);
+
+/* 🏗️ Core */
 routes.use('/grupo', grupoController);
-routes.use('/hinoHarpa', createHinoHarpa);
-routes.use('/hinosHarpa', fetchAllHinosHarpa);
-routes.use('/hinosHarpa/:numero', fetchHinoHarpaByNumero);
-routes.use('/hinario', fetchHinosGeral);
 routes.use('/ensaios', ensaioRouter);
 routes.use('/eventos', eventoRouter);
 routes.use('/favoritos', favoritosRouter);
+
+/* 🎵 HINÁRIOS (HARPA + CCB) */
+routes.get('/hinos/:hinario', fetchHinos);
+routes.get('/hinos/:hinario/numero/:numero', fetchHinoByNumero);
+routes.get('/hinos/:hinario/id/:id', fetchHinoById);
+
+/* 🎶 HINÁRIO GERAL (LEGADO – NÃO MEXE) */
+routes.get('/hinario', fetchHinosGeralController);
+routes.get('/hinario/:id', fetchHinoGeralByIdController);
 
 export default routes;

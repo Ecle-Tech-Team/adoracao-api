@@ -7,7 +7,7 @@ import path from "path";
 dotenv.config();
 
 async function connect() {
-  const caCert = fs.readFileSync(path.resolve(process.cwd(),"certs", "ca.pem"));
+  //const caCert = fs.readFileSync(path.resolve(process.cwd(),"certs", "ca.pem"));
   const connection = await mysql2.createConnection({
     host: process.env.SQL_HOST,
     password: process.env.SQL_PASSWORD,
@@ -16,10 +16,10 @@ async function connect() {
     user: process.env.SQL_USER,
     port: process.env.SQL_PORT || 3306,
     //ssl: process.env.SQL_SSL ? { rejectUnauthorized: true } : null,
-    ssl: {
-      rejectUnauthorized: true,
-      ca: caCert
-    },
+    // ssl: {
+    //   rejectUnauthorized: true,
+    //   ca: caCert
+    // },
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0

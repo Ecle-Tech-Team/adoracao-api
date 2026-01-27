@@ -25,7 +25,7 @@ export const fetchHinoById = async (hinoId) => {
   const { client, db } = await dbConnections.connectMongoDB();
   try {
     return await db
-      .collection(COLLECTION_HINARIO_GERAL)
+      .collection(COLLECTION_HINARIO_GERAL, COLLECTION_HARPA, COLLECTION_CCB)
       .findOne({ _id: new ObjectId(hinoId) });
   } finally {
     client.close();
@@ -69,15 +69,16 @@ export const fetchHinoByNumeroAndHinario = async (hinario, numero) => {
   }
 };
 
-export const fetchHinoByIdAndHinario = async (hinario, id) => {
-  const collection = getCollectionByHinario(hinario);
+export const fetchHinoByIdAndHinario = async (id, hinario) => {
   const { client, db } = await dbConnections.connectMongoDB();
-
+  
   try {
-    return await db
-      .collection(collection)
+    const hino = await db
+      .collection(hinario)
       .findOne({ _id: new ObjectId(id) });
+
+    return hino;
   } finally {
-    client.close();
+    await client.close();
   }
 };

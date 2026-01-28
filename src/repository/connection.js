@@ -15,16 +15,8 @@ async function connect() {
     database: process.env.SQL_DB,
     user: process.env.SQL_USER,
     port: process.env.SQL_PORT || 3306,
-    //ssl: process.env.SQL_SSL ? { rejectUnauthorized: true } : null,
-    // ssl: {
-    //   rejectUnauthorized: true,
-    //   ca: caCert
-    // },
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
+    ssl: { rejectUnauthorized: false }
   });
-
   return connection;
 }
 

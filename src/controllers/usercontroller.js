@@ -4,13 +4,22 @@ import { getCandidatosComponente, listarComponentesDoGrupo, adicionarComponenteA
 
 const route = express.Router();
 
-route.post('/', async(request, response) => {
-  try{
-    const {name, email, password, typeUser} = request.body;
+route.post('/', async (request, response) => {
+  try {
+    const { name, email, password, typeUser } = request.body;
+
+    if (!name || !email || !password || !typeUser) {
+      return response.status(400).json({
+        message: 'Dados obrigatórios não informados'
+      });
+    }
+
     await db.createUser(name, email, password, typeUser);
-    response.status(201).send({message:`Salvo com sucesso`});
-  }catch{
-    response.status(500).send({message:`Erro na requisição`})
+
+    response.status(201).json({ message: 'Salvo com sucesso' });
+  } catch (error) {
+    console.error('Erro ao criar usuário:', error);
+    response.status(500).json({ message: 'Erro na requisição' });
   }
 });
 

@@ -1,9 +1,9 @@
 import db from '../repository/connection.js'
 
-async function createUser(name, email, password, typeUser){
-  const sql = "INSERT INTO usuarios(nome, email, senha, tipo_usuario) VALUES(?,?,?,?)"
+async function createUser(name, email, password, typeUser, birthDate){
+  const sql = "INSERT INTO usuarios(nome, email, senha, tipo_usuario, data_nasc) VALUES(?,?,?,?,?)"
   
-  const values = [name, email, password, typeUser];
+  const values = [name, email, password, typeUser, birthDate ];
   const conn = await db.connect();
   await conn.query(sql, values)
   conn.end();

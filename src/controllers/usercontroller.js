@@ -6,19 +6,13 @@ const route = express.Router();
 
 route.post('/', async (request, response) => {
   try {
-    const { name, email, password, typeUser } = request.body;
+    const { name, email, password, typeUser, birthDate } = request.body;
 
-    if (!name || !email || !password || !typeUser) {
-      return response.status(400).json({
-        message: 'Dados obrigatórios não informados'
-      });
-    }
-
-    await db.createUser(name, email, password, typeUser);
+    await db.createUser(name, email, password, typeUser, birthDate);
 
     response.status(201).json({ message: 'Salvo com sucesso' });
   } catch (error) {
-    console.error('Erro ao criar usuário:', error);
+    console.error(error);
     response.status(500).json({ message: 'Erro na requisição' });
   }
 });

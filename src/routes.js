@@ -6,6 +6,7 @@ import grupoController from './controllers/grupocontroller.js';
 import ensaioRouter from './controllers/ensaioscontroller.js';
 import eventoRouter from './controllers/eventoscontroller.js';
 import favoritosRouter from './controllers/favoritoscontroller.js';
+import notificacoesRouter from './controllers/notificacoescontroller.js';
 
 import {
   fetchHinos,
@@ -26,6 +27,7 @@ routes.use('/grupo', grupoController);
 routes.use('/ensaios', ensaioRouter);
 routes.use('/eventos', eventoRouter);
 routes.use('/favoritos', favoritosRouter);
+routes.use('/notificacoes', notificacoesRouter)
 
 /* 🎵 HINÁRIOS (HARPA + CCB) */
 routes.get('/hinos/:hinario', fetchHinos);

@@ -84,7 +84,7 @@ async function listarNotificacoesUsuario(id_user) {
       FROM notificacoes
       WHERE id_usuario = ?
          OR tipo = 'GLOBAL'
-      ORDER BY created_at DESC
+      ORDER BY criada_em DESC
     `;
 
     const [rows] = await conn.query(sql, [id_user]);

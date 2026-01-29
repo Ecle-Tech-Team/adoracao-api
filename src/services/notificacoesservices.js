@@ -7,13 +7,25 @@ async function criarNotificacaoGlobal(titulo, mensagem) {
   const conn = await db.connect();
 
   try {
-    const sql = `
-      INSERT INTO notificacoes (titulo, mensagem, tipo)
-      VALUES (?, ?, 'GLOBAL')
-    `;
-    await conn.query(sql, [titulo, mensagem]);
-  } catch (error) {
-    throw error;
+    const [result] = await conn.query(
+      `INSERT INTO notificacoes (tipo, titulo, mensagem)
+       VALUES ('GLOBAL', ?, ?)`,
+      [titulo, mensagem]
+    );
+
+    const idNotificacao = result.insertId;
+
+    const [usuarios] = await conn.query(
+      `SELECT id_usuario FROM usuarios`
+    );
+
+    for (const u of usuarios) {
+      await conn.query(
+        `INSERT INTO notificacoes_usuarios (id_notificacao, id_usuario)
+         VALUES (?, ?)`,
+        [idNotificacao, u.id_usuario]
+      );
+    }
   } finally {
     conn.end();
   }
@@ -75,22 +87,27 @@ async function criarNotificacaoGrupo(id_grupo, tipo, titulo, mensagem, referenci
 /**
  * 🔔 Listar notificações do usuário
  */
-async function listarNotificacoesUsuario(id_user) {
+async function listarNotificacoesUsuario(id_usuario) {
   const conn = await db.connect();
 
   try {
     const sql = `
-      SELECT *
-      FROM notificacoes
-      WHERE id_usuario = ?
-         OR tipo = 'GLOBAL'
-      ORDER BY criada_em DESC
+      SELECT 
+        n.id_notificacao,
+        n.tipo,
+        n.titulo,
+        n.mensagem,
+        n.criada_em,
+        nu.lida
+      FROM notificacoes n
+      JOIN notificacoes_usuarios nu
+        ON nu.id_notificacao = n.id_notificacao
+      WHERE nu.id_usuario = ?
+      ORDER BY n.criada_em DESC
     `;
 
-    const [rows] = await conn.query(sql, [id_user]);
+    const [rows] = await conn.query(sql, [id_usuario]);
     return rows;
-  } catch (error) {
-    throw error;
   } finally {
     conn.end();
   }
@@ -99,14 +116,16 @@ async function listarNotificacoesUsuario(id_user) {
 /**
  * ✅ Marcar como lida
  */
-async function marcarComoLida(id_notificacao) {
+async function marcarComoLida(id_notificacao, id_usuario) {
   const conn = await db.connect();
 
   try {
-    const sql = "UPDATE notificacoes SET lida = 1 WHERE id_notificacao = ?";
-    await conn.query(sql, [id_notificacao]);
-  } catch (error) {
-    throw error;
+    await conn.query(
+      `UPDATE notificacoes_usuarios
+       SET lida = 1, lida_em = NOW()
+       WHERE id_notificacao = ? AND id_usuario = ?`,
+      [id_notificacao, id_usuario]
+    );
   } finally {
     conn.end();
   }
@@ -115,20 +134,17 @@ async function marcarComoLida(id_notificacao) {
 /**
  * 🔢 Contar não lidas
  */
-async function contarNaoLidas(id_user) {
+async function contarNaoLidas(id_usuario) {
   const conn = await db.connect();
 
   try {
-    const sql = `
-      SELECT COUNT(*) AS total
-      FROM notificacoes
-      WHERE lida = 0
-        AND (id_usuario = ? OR tipo = 'GLOBAL')
-    `;
-    const [rows] = await conn.query(sql, [id_user]);
+    const [rows] = await conn.query(
+      `SELECT COUNT(*) AS total
+       FROM notificacoes_usuarios
+       WHERE id_usuario = ? AND lida = 0`,
+      [id_usuario]
+    );
     return rows[0].total;
-  } catch (error) {
-    throw error;
   } finally {
     conn.end();
   }

@@ -1,10 +1,9 @@
 import express from 'express';
 import pushService from '../services/pushservices.js';
-import authMiddleware from '../middlewares/authMiddleware.js';
 
 const route = express.Router();
 
-route.post('/', authMiddleware, async (req, res) => {
+route.post('/', async (req, res) => {
   try {
     const { token } = req.body;
     const id_usuario = req.user.id_user;

@@ -8,6 +8,7 @@ dotenv.config();
 const api = Express()
 api.use(cors());
 api.use(Express.json());
+api.use(Express.urlencoded({ extended: true }));
 
 api.use('/', routes);
 

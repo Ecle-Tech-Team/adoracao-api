@@ -32,3 +32,5 @@ coverage/
 .env.local
 .env.development
 .env.production
+/Dockerfile
+/docker-compose.yml

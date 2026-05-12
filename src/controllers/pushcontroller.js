@@ -5,12 +5,13 @@ const route = express.Router();
 
 route.post('/', async (req, res) => {
   try {
-    const { token } = req.body;
-    const id_usuario = req.user.id_user;
+    const { token, id_user } = req.body;
 
-    if (!token) {
-      return res.status(400).json({ message: 'Token é obrigatório' });
+    if (!token || !id_user) {
+      return res.status(400).json({ message: 'Token e id_user são obrigatórios' });
     }
+
+    const id_usuario = id_user;
 
     await pushService.salvarPushToken(id_usuario, token);
     res.status(200).json({ message: 'Push token registrado' });

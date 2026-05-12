@@ -1,5 +1,6 @@
 import express from "express";
 import notificacaoService from "../services/notificacoesservices.js";
+import db from "../repository/connection.js";
 
 const route = express.Router();
 
@@ -125,6 +126,37 @@ route.get('/:id_user/nao-lidas', async (req, res) => {
     res.status(200).json({ total });
   } catch (error) {
     res.status(500).json({ message: `Erro ao contar notificações: ${error.message}` });
+  }
+});
+
+route.post("/push-token", async (req, res) => {
+  try {
+    const { token, id_user } = req.body || {};
+
+    if (!token || !id_user) {
+      return res.status(400).json({
+        message: "token e id_user são obrigatórios.",
+      });
+    }
+
+    const conn = await db.connect();
+
+    await conn.query(
+      `
+      INSERT INTO push_tokens (id_user, token)
+      VALUES (?, ?)
+      ON DUPLICATE KEY UPDATE token = VALUES(token)
+      `,
+      [id_user, token]
+    );
+
+    conn.end();
+
+    return res.status(200).json({ message: "Token registrado com sucesso." });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message,
+    });
   }
 });
 

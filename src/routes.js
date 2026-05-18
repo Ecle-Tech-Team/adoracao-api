@@ -8,6 +8,7 @@ import eventoRouter from './controllers/eventoscontroller.js';
 import favoritosRouter from './controllers/favoritoscontroller.js';
 import notificacoesRouter from './controllers/notificacoescontroller.js';
 import pushController from './controllers/pushcontroller.js';
+import playlistRouter from './controllers/playlistscontroller.js';
 
 import {
   fetchHinos,
@@ -30,6 +31,7 @@ routes.use('/eventos', eventoRouter);
 routes.use('/favoritos', favoritosRouter);
 routes.use('/notificacoes', notificacoesRouter);
 routes.use('/push-token', pushController);
+routes.use('/playlists', playlistRouter);
 
 /* 🎵 HINÁRIOS (HARPA + CCB) */
 routes.get('/hinos/:hinario', fetchHinos);

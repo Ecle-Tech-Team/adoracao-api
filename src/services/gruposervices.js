@@ -120,4 +120,17 @@ export const removeHinoFromGrupo = async (id_grupo, id_hino) => {
   };
   
 
-export default { createGroup, addHinoToGrupo, getHinosDoGrupo, removeHinoFromGrupo };
+export const getGrupoById = async (id) => {
+    const conn = await db.connect();
+    try {
+        const sql = "SELECT id, nome, local, tipo_grupo FROM grupo WHERE id = ?";
+        const [rows] = await conn.query(sql, [id]);
+        return rows.length > 0 ? rows[0] : null;
+    } catch (error) {
+        throw error;
+    } finally {
+        conn.end();
+    }
+};
+
+export default { createGroup, addHinoToGrupo, getHinosDoGrupo, removeHinoFromGrupo, getGrupoById };

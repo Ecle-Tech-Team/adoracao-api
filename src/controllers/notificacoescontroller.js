@@ -105,8 +105,13 @@ route.get('/:id_user', async (req, res) => {
 route.put('/:id_notificacao/lida', async (req, res) => {
   try {
     const { id_notificacao } = req.params;
+    const { id_user } = req.body;
 
-    await notificacaoService.marcarComoLida(id_notificacao);
+    if (!id_user) {
+      return res.status(400).json({ message: "id_user é obrigatório." });
+    }
+
+    await notificacaoService.marcarComoLida(id_notificacao, id_user);
 
     res.status(200).json({ message: "Notificação marcada como lida." });
   } catch (error) {

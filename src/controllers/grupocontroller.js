@@ -45,6 +45,19 @@ route.get('/:id_grupo/hinos', async (req, res) => {
   }
 });
 
+route.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const grupo = await groupService.getGrupoById(id);
+    if (!grupo) {
+      return res.status(404).send({ message: 'Grupo não encontrado' });
+    }
+    res.status(200).json(grupo);
+  } catch (error) {
+    res.status(500).send({ message: `Erro ao buscar grupo: ${error.message}` });
+  }
+});
+
 route.delete('/:id_grupo/hinos/:id_hino', async (req, res) => {
   try {
     const { id_grupo, id_hino } = req.params;

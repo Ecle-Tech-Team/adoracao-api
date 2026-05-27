@@ -3,6 +3,7 @@ import express from 'express';
 import loginUser from './controllers/logincontroller.js';
 import routerUser from './controllers/usercontroller.js';
 import grupoController from './controllers/grupocontroller.js';
+import grupoPlaylistController from './controllers/grupoPlaylistController.js';
 import ensaioRouter from './controllers/ensaioscontroller.js';
 import eventoRouter from './controllers/eventoscontroller.js';
 import favoritosRouter from './controllers/favoritoscontroller.js';
@@ -26,6 +27,7 @@ routes.use('/user', routerUser);
 
 /* 🏗️ Core */
 routes.use('/grupo', grupoController);
+routes.use('/grupo', grupoPlaylistController);
 routes.use('/ensaios', ensaioRouter);
 routes.use('/eventos', eventoRouter);
 routes.use('/favoritos', favoritosRouter);

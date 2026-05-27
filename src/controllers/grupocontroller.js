@@ -26,9 +26,9 @@ route.post('/', async (request, response) => {
 route.post('/:id_grupo/hinos', async (req, res) => {
   try {
     const { id_grupo } = req.params;
-    const { hinoId } = req.body;
+    const { hinoId, tag } = req.body;
 
-    const result = await groupService.addHinoToGrupo(id_grupo, hinoId);
+    const result = await groupService.addHinoToGrupo(id_grupo, hinoId, tag);
     res.status(201).send(result);
   } catch (error) {
     res.status(500).send({ message: `Erro ao adicionar hino ao grupo: ${error.message}` });
@@ -65,6 +65,17 @@ route.delete('/:id_grupo/hinos/:id_hino', async (req, res) => {
     res.status(200).send(result);
   } catch (error) {
     res.status(500).send({ message: `Erro ao remover hino do grupo: ${error.message}` });
+  }
+});
+
+route.put('/:id_grupo/hinos/:hinoId/tag', async (req, res) => {
+  try {
+    const { id_grupo, hinoId } = req.params;
+    const { tag } = req.body;
+    const result = await groupService.updateHinoTag(id_grupo, hinoId, tag);
+    res.status(200).send(result);
+  } catch (error) {
+    res.status(500).send({ message: `Erro ao atualizar tag do hino: ${error.message}` });
   }
 });
 

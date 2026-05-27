@@ -1,5 +1,5 @@
 import express from 'express';
-import { createEnsaio, getEnsaiosDoGrupo, removeEnsaio } from '../services/ensaiosservices.js';
+import { createEnsaio, getEnsaiosDoGrupo, updateEnsaio, removeEnsaio } from '../services/ensaiosservices.js';
 
 const route = express.Router();
 
@@ -23,6 +23,18 @@ route.get('/:id_grupo', async (req, res) => {
         res.status(200).json(ensaios);
     } catch (error) {
         res.status(500).json({ message: `Erro ao buscar ensaios do grupo: ${error.message}` });
+    }
+});
+
+route.put('/:id', async (req, res) => {
+    const { id } = req.params;
+    const { data, descricao, local } = req.body;
+
+    try {
+        const response = await updateEnsaio(id, data, descricao, local);
+        res.status(200).json(response);
+    } catch (error) {
+        res.status(500).send({ message: `Erro ao atualizar ensaio: ${error.message}` });
     }
 });
 

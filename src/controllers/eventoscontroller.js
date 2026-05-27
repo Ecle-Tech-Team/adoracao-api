@@ -1,5 +1,5 @@
 import express from 'express';
-import { createEventos, getEventosDoGrupo, removeEvento } from '../services/eventosservices.js';
+import { createEventos, getEventosDoGrupo, updateEvento, removeEvento } from '../services/eventosservices.js';
 
 const route = express.Router();
 
@@ -26,14 +26,26 @@ route.get('/:id_grupo', async (req, res) => {
     }
 });
 
+route.put('/:id', async (req, res) => {
+    const { id } = req.params;
+    const { data, descricao, local } = req.body;
+
+    try {
+        const response = await updateEvento(id, data, descricao, local);
+        res.status(200).json(response);
+    } catch (error) {
+        res.status(500).send({ message: `Erro ao atualizar evento: ${error.message}` });
+    }
+});
+
 route.delete('/:id', async (req, res) => {
     const { id } = req.params;
 
     try {
         const response = await removeEvento(id);
-        res.status(200).json({ message: "Ensaio deletado com sucesso" });
+        res.status(200).json({ message: "Evento deletado com sucesso" });
     } catch (error) {
-        res.status(500).send({ message: `Erro ao deletar ensaio: ${error.message}` });
+        res.status(500).send({ message: `Erro ao deletar evento: ${error.message}` });
     }
 });
 

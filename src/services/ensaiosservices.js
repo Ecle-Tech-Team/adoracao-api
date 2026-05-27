@@ -33,9 +33,23 @@ export const getEnsaiosDoGrupo = async (id_grupo) => {
     }
 };
 
+export const updateEnsaio = async (id, data, descricao, local) => {
+    const conn = await db.connect();
+    try {
+        const sql = "UPDATE ensaios_grupo SET data = ?, descricao = ?, local = ? WHERE id = ?";
+        await conn.query(sql, [data, descricao, local, id]);
+        return { message: "Ensaio atualizado com sucesso" };
+    } catch (error) {
+        console.error("Erro ao atualizar ensaio:", error);
+        throw error;
+    } finally {
+        conn.end();
+    }
+};
+
 export const removeEnsaio = async (id) => {
     const conn = await db.connect();
-    try {        
+    try {
         const deleteEnsaioSql = "DELETE FROM ensaios_grupo WHERE id = ?";
         await conn.query(deleteEnsaioSql, [id]);
 

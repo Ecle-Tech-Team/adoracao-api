@@ -47,22 +47,22 @@ async function createGroup(name, local, typeGroup, regenteId) {
     }
 }
 
-export const addHinoToGrupo = async (id_grupo, hinoId) => {
+export const addHinoToGrupo = async (id_grupo, hinoId, tag = null) => {
     const conn = await db.connect();
 
-    try {        
+    try {
         const [grupo] = await conn.query("SELECT * FROM grupo WHERE id = ?", [id_grupo]);
         if (grupo.length === 0) {
             throw new Error("Grupo não encontrado");
         }
-        
+
         const hino = await fetchHinoById(hinoId);
         if (!hino) {
             throw new Error("Hino não encontrado no MongoDB");
         }
-        
-        const sql = "INSERT INTO hinario_grupo (grupo_id, hino_id) VALUES (?, ?)";
-        await conn.query(sql, [id_grupo, hinoId]);
+
+        const sql = "INSERT INTO hinario_grupo (grupo_id, hino_id, tag) VALUES (?, ?, ?)";
+        await conn.query(sql, [id_grupo, hinoId, tag]);
 
         return { message: 'Hino adicionado ao grupo com sucesso' };
     } catch (error) {
@@ -74,23 +74,23 @@ export const addHinoToGrupo = async (id_grupo, hinoId) => {
 
 export const getHinosDoGrupo = async (id_grupo) => {
     const conn = await db.connect();
-    const hinos = []; 
+    const hinos = [];
 
-    try {                
-        const [rows] = await conn.query("SELECT hino_id FROM hinario_grupo WHERE grupo_id = ?", [id_grupo]);
-        
+    try {
+        const [rows] = await conn.query("SELECT hino_id, tag FROM hinario_grupo WHERE grupo_id = ?", [id_grupo]);
+
         if (rows.length === 0) {
             return { message: "Nenhum hino encontrado para este grupo." };
         }
-       
+
         for (const row of rows) {
             const hino = await fetchHinoById(row.hino_id);
             if (hino) {
-                hinos.push(hino);
+                hinos.push({ ...hino, tag: row.tag });
             }
         }
 
-        return hinos; 
+        return hinos;
     } catch (error) {
         console.error("Erro ao buscar hinos do grupo:", error.message);
         throw error;
@@ -133,4 +133,17 @@ export const getGrupoById = async (id) => {
     }
 };
 
-export default { createGroup, addHinoToGrupo, getHinosDoGrupo, removeHinoFromGrupo, getGrupoById };
+export const updateHinoTag = async (id_grupo, hinoId, tag) => {
+    const conn = await db.connect();
+    try {
+        const sql = "UPDATE hinario_grupo SET tag = ? WHERE grupo_id = ? AND hino_id = ?";
+        await conn.query(sql, [tag, id_grupo, hinoId]);
+        return { message: 'Tag atualizada com sucesso' };
+    } catch (error) {
+        throw error;
+    } finally {
+        conn.end();
+    }
+};
+
+export default { createGroup, addHinoToGrupo, getHinosDoGrupo, removeHinoFromGrupo, getGrupoById, updateHinoTag };

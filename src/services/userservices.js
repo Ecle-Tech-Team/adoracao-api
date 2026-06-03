@@ -1,9 +1,9 @@
 import db from '../repository/connection.js'
 
-async function createUser(name, email, password, typeUser, birthDate){
-  const sql = "INSERT INTO usuarios(nome, email, senha, tipo_usuario, data_nasc) VALUES(?,?,?,?,?)"
-  
-  const values = [name, email, password, typeUser, birthDate ];
+async function createUser(name, email, password, typeUser, birthDate, hinario, igreja){
+  const sql = "INSERT INTO usuarios(nome, email, senha, tipo_usuario, data_nasc, hinario, igreja) VALUES(?,?,?,?,?,?,?)"
+
+  const values = [name, email, password, typeUser, birthDate, hinario || 'HARPA', igreja || '' ];
   const conn = await db.connect();
   await conn.query(sql, values)
   conn.end();
@@ -73,16 +73,57 @@ export async function adicionarComponenteAoGrupo(idUser, id_grupo) {
 
 export const removerComponente = async (idUser, id_grupo) => {
   const conn = await db.connect();
-  try {    
+  try {
     const sql = "UPDATE usuarios SET tipo_usuario = 'Adorador', id_grupo = ? WHERE id_usuario = ? AND tipo_usuario = 'Componente'";
     const values = [id_grupo, idUser];
     await conn.query(sql, values);
     conn.end();
   } catch (error) {
     console.error('Erro ao remover componente:', error);
-    throw error; 
+    throw error;
   }
 };
+
+export async function checkEmailExists(email) {
+  const conn = await db.connect();
+  try {
+    const sql = "SELECT COUNT(*) AS total FROM usuarios WHERE email = ?";
+    const [rows] = await conn.query(sql, [email]);
+    return rows[0].total > 0;
+  } catch (error) {
+    console.error('Erro ao verificar email:', error);
+    throw error;
+  } finally {
+    conn.end();
+  }
+}
+
+export async function listarIgrejas() {
+  const conn = await db.connect();
+  try {
+    const sql = "SELECT DISTINCT igreja FROM usuarios WHERE igreja IS NOT NULL AND igreja != '' ORDER BY igreja ASC";
+    const [rows] = await conn.query(sql, []);
+    return rows.map(r => r.igreja);
+  } catch (error) {
+    console.error('Erro ao listar igrejas:', error);
+    throw error;
+  } finally {
+    conn.end();
+  }
+}
+
+export async function updateUserGrupo(idUser, id_grupo) {
+  const conn = await db.connect();
+  try {
+    const sql = "UPDATE usuarios SET id_grupo = ? WHERE id_usuario = ?";
+    await conn.query(sql, [id_grupo, idUser]);
+  } catch (error) {
+    console.error('Erro ao atualizar grupo do usuário:', error);
+    throw error;
+  } finally {
+    conn.end();
+  }
+}
 
 
 export default {createUser, updateUser, deleteUser};

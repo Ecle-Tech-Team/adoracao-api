@@ -11,6 +11,8 @@ import notificacoesRouter from './controllers/notificacoescontroller.js';
 import pushController from './controllers/pushcontroller.js';
 import playlistRouter from './controllers/playlistscontroller.js';
 
+import emailRouter from './controllers/emailcontroller.js';
+
 import {
   fetchHinos,
   fetchHinoByNumero,
@@ -34,6 +36,9 @@ routes.use('/favoritos', favoritosRouter);
 routes.use('/notificacoes', notificacoesRouter);
 routes.use('/push-token', pushController);
 routes.use('/playlists', playlistRouter);
+
+/* 📧 E-mail verification */
+routes.use('/email', emailRouter);
 
 /* 🎵 HINÁRIOS (HARPA + CCB) */
 routes.get('/hinos/:hinario', fetchHinos);

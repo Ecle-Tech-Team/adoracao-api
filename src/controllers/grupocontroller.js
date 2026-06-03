@@ -1,13 +1,12 @@
 import express from "express";
-import groupService from "../services/gruposervices.js";
-import { removeHinoFromGrupo } from "../services/gruposervices.js";
+import groupService, { removeHinoFromGrupo, deleteGroup } from "../services/gruposervices.js";
 
 const route = express.Router();
 
 route.post('/', async (request, response) => {
   try {
     const { name, local, typeGroup, regenteId } = request.body;
-          
+
     if (!name || !local || !typeGroup || !regenteId) {
       return response.status(400).json({ message: "Todos os campos são obrigatórios." });
     }
@@ -20,6 +19,15 @@ route.post('/', async (request, response) => {
       } else {
           response.status(500).send({ message: `Erro na criação do grupo: ${error.message}` });
       }
+  }
+});
+
+route.get('/', async (req, res) => {
+  try {
+    const grupos = await groupService.getAllGrupos();
+    res.status(200).json(grupos);
+  } catch (error) {
+    res.status(500).send({ message: `Erro ao listar grupos: ${error.message}` });
   }
 });
 
@@ -55,6 +63,17 @@ route.get('/:id', async (req, res) => {
     res.status(200).json(grupo);
   } catch (error) {
     res.status(500).send({ message: `Erro ao buscar grupo: ${error.message}` });
+  }
+});
+
+route.delete('/:id_grupo', async (req, res) => {
+  try {
+    const { id_grupo } = req.params;
+    const { regenteId } = req.body;
+    const result = await deleteGroup(id_grupo, regenteId);
+    res.status(200).send(result);
+  } catch (error) {
+    res.status(500).send({ message: `Erro ao excluir grupo: ${error.message}` });
   }
 });
 

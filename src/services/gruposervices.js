@@ -133,6 +133,19 @@ export const getGrupoById = async (id) => {
     }
 };
 
+export const getAllGrupos = async () => {
+    const conn = await db.connect();
+    try {
+        const sql = "SELECT id, nome, local, tipo_grupo FROM grupo ORDER BY nome";
+        const [rows] = await conn.query(sql);
+        return rows;
+    } catch (error) {
+        throw error;
+    } finally {
+        conn.end();
+    }
+};
+
 export const updateHinoTag = async (id_grupo, hinoId, tag) => {
     const conn = await db.connect();
     try {
@@ -146,4 +159,25 @@ export const updateHinoTag = async (id_grupo, hinoId, tag) => {
     }
 };
 
-export default { createGroup, addHinoToGrupo, getHinosDoGrupo, removeHinoFromGrupo, getGrupoById, updateHinoTag };
+export const deleteGroup = async (id_grupo, regenteId) => {
+    const conn = await db.connect();
+    try {
+        // Remove hinos do grupo
+        await conn.query("DELETE FROM hinario_grupo WHERE grupo_id = ?", [id_grupo]);
+        // Remove os componentes do grupo (atualiza usuarios) e altera tipo para 'Adorador'
+        await conn.query("UPDATE usuarios SET id_grupo = NULL, tipo_usuario = 'Adorador' WHERE id_grupo = ?", [id_grupo]);
+        // Remove o grupo
+        const sql = "DELETE FROM grupo WHERE id = ? AND regente_id IN (SELECT regente_id FROM regentes WHERE usuario_id = ?)";
+        const [result] = await conn.query(sql, [id_grupo, regenteId]);
+        if (result.affectedRows === 0) {
+            throw new Error("Grupo não encontrado ou você não tem permissão para excluí-lo.");
+        }
+        return { message: 'Grupo excluído com sucesso' };
+    } catch (error) {
+        throw error;
+    } finally {
+        conn.end();
+    }
+};
+
+export default { createGroup, addHinoToGrupo, getHinosDoGrupo, removeHinoFromGrupo, getGrupoById, updateHinoTag, getAllGrupos, deleteGroup };

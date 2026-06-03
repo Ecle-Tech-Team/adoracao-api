@@ -17,7 +17,7 @@ export const getHinoByNumero = (hinario, numero) => {
 };
 
 export const getHinoByIdHinario = (hinario, id) => {
-  return fetchHinoByIdAndHinario(hinario, id);
+  return fetchHinoByIdAndHinario(id, hinario);
 };
 
 /* ========= HINÁRIO GERAL ========= */

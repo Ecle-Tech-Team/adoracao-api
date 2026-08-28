@@ -14,7 +14,9 @@
     "nodemon": "^3.0.1"
   },
   "scripts": {
-    "start": "nodemon src/index.js"
+    "start": "nodemon src/index.js",
+    "dev:local": "docker compose -f docker-compose.local.yml up --build",
+    "dev:local:down": "docker compose -f docker-compose.local.yml down"
   },
   "type": "module"
 }

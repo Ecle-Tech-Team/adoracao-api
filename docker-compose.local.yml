@@ -1,0 +1,53 @@
+# Stack local (sem homelab/cloudflared/nginx).
+# Uso: docker compose -f docker-compose.local.yml up --build
+name: adoracao-local
+
+services:
+  api:
+    build: .
+    container_name: adoracao-api-local
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+      - mysql
+    ports:
+      - "3333:3333"
+    networks:
+      - adoracao-net
+
+  mongo:
+    image: mongo:7
+    container_name: adoracao-mongo-local
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - adoracao-net
+
+  mysql:
+    image: mysql:8
+    container_name: adoracao-mysql-local
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_senha
+      MYSQL_DATABASE: adoracao_db
+      MYSQL_USER: adoracao_user
+      MYSQL_PASSWORD: sua_senha
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql-init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "3307:3306"
+    networks:
+      - adoracao-net
+
+volumes:
+  mongo_data:
+  mysql_data:
+
+networks:
+  adoracao-net:

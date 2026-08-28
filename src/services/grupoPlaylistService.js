@@ -123,19 +123,25 @@ async function deleteGrupoPlaylist(id_grupo, playlist_id) {
   }
 }
 
-const hinoPayload = {
-  hino_id: selectedHino?.hino_id || selectedHino?._id || selectedHino?.id,
-  mongo_id: selectedHino?._id || selectedHino?.id || null,
-  tipo_hino: String(selectedHino?.tipo_hino || selectedHino?.hinario || '').toUpperCase(),
-  numero: selectedHino?.numero ?? null,
-  titulo: selectedHino?.titulo || selectedHino?.title || null,
-  autor: selectedHino?.autor || selectedHino?.author || null,
-  hinario: selectedHino?.hinario || null,
-};
+async function addHinoToPlaylist(playlist_id, hino_id, tipo_hino) {
+  const tipoNormalizado = normalizeTipoHino(tipo_hino);
+  const conn = await getConnection();
+  try {
+    const [result] = await conn.execute(
+      "INSERT INTO grupo_playlist_hinos (playlist_id, hino_id, tipo_hino) VALUES (?, ?, ?)",
+      [playlist_id, hino_id, tipoNormalizado],
+    );
 
-console.log('PAYLOAD enviado para grupo playlist:', hinoPayload);
-
-await addHinoToGrupoPlaylist(id_grupo, playlist.id, hinoPayload);
+    return {
+      id: result.insertId,
+      playlist_id,
+      hino_id,
+      tipo_hino: tipoNormalizado,
+    };
+  } finally {
+    await conn.end();
+  }
+}
 
 async function removeHinoFromPlaylist(playlist_id, hino_id) {
   const conn = await getConnection();

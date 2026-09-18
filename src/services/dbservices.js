@@ -1,6 +1,6 @@
-import dbConnections from '../repository/connection.js';
-import { ObjectId } from 'mongodb';
-import dotenv from 'dotenv';
+import dbConnections from "../repository/connection.js";
+import { ObjectId } from "mongodb";
+import dotenv from "dotenv";
 
 dotenv.config();
 
@@ -25,7 +25,7 @@ export const fetchHinoById = async (hinoId) => {
   const { client, db } = await dbConnections.connectMongoDB();
   try {
     return await db
-      .collection(COLLECTION_HINARIO_GERAL, COLLECTION_HARPA, COLLECTION_CCB)
+      .collection(COLLECTION_HINARIO_GERAL)
       .findOne({ _id: new ObjectId(hinoId) });
   } finally {
     client.close();
@@ -37,13 +37,19 @@ export const fetchHinoById = async (hinoId) => {
 ================================ */
 
 const getCollectionByHinario = (hinario) => {
-  switch (hinario) {
-    case 'harpa':
+  const hinarioNormalizado = hinario.toLowerCase().trim();
+
+  switch (hinarioNormalizado) {
+    case "harpa":
+    case "harpa_crista":
       return COLLECTION_HARPA;
-    case 'ccb':
+
+    case "ccb":
+    case "hinario_ccb":
       return COLLECTION_CCB;
+
     default:
-      throw new Error('Hinário inválido');
+      throw new Error(`Hinário inválido: ${hinario}`);
   }
 };
 
@@ -70,12 +76,18 @@ export const fetchHinoByNumeroAndHinario = async (hinario, numero) => {
 };
 
 export const fetchHinoByIdAndHinario = async (id, hinario) => {
+  const collectionName = getCollectionByHinario(hinario);
+
+  if (!ObjectId.isValid(id)) {
+    throw new Error("ID do hino inválido");
+  }
+
   const { client, db } = await dbConnections.connectMongoDB();
-  
+
   try {
-    const hino = await db
-      .collection(hinario)
-      .findOne({ _id: new ObjectId(id) });
+    const hino = await db.collection(collectionName).findOne({
+      _id: new ObjectId(id),
+    });
 
     return hino;
   } finally {

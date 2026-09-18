@@ -44,6 +44,12 @@ routes.use('/email', emailRouter);
 routes.get('/hinos/:hinario', fetchHinos);
 routes.get('/hinos/:hinario/numero/:numero', fetchHinoByNumero);
 routes.get('/hinos/:hinario/id/:id', fetchHinoById);
+routes.get('/hinos/:hinario/id/:id', (req, res, next) => {
+  console.log('ROTA DE BUSCA POR ID ACIONADA');
+  console.log('Parâmetros:', req.params);
+
+  next();
+}, fetchHinoById);
 
 /* 🎶 HINÁRIO GERAL (LEGADO – NÃO MEXE) */
 routes.get('/hinario', fetchHinosGeralController);

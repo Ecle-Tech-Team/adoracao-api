@@ -44,15 +44,30 @@ export const fetchHinoByNumero = async (req, res) => {
 };
 
 export const fetchHinoById = async (req, res) => {
-  const { hinario, id } = req.params;
-  const tipo = mapTipoHino(hinario);
-
   try {
+    console.log('CONTROLLER ACIONADO');
+    console.log('Params:', req.params);
+
+    const { hinario, id } = req.params;
+
     const hino = await getHinoByIdHinario(hinario, id);
-    if (!hino) return res.status(404).send('Hino não encontrado');
-    res.json({ ...hino, tipo_hino: tipo });
-  } catch (err) {
-    res.status(400).json({ message: err.message });
+
+    if (!hino) {
+      return res.status(404).json({
+        message: 'Hino não encontrado',
+        id,
+        hinario,
+      });
+    }
+
+    return res.status(200).json(hino);
+  } catch (error) {
+    console.error('Erro no controller:', error);
+
+    return res.status(500).json({
+      message: 'Erro ao buscar hino',
+      error: error.message,
+    });
   }
 };
 

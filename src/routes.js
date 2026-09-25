@@ -13,6 +13,8 @@ import playlistRouter from './controllers/playlistscontroller.js';
 
 import emailRouter from './controllers/emailcontroller.js';
 
+import grupoHinoController from './controllers/grupoHinoController.js';
+
 import {
   fetchHinos,
   fetchHinoByNumero,
@@ -30,6 +32,10 @@ routes.use('/user', routerUser);
 /* 🏗️ Core */
 routes.use('/grupo', grupoController);
 routes.use('/grupo', grupoPlaylistController);
+
+/* 🎶 PROJEÇÃO DE GRUPO */
+routes.use('/grupo', grupoHinoController);
+
 routes.use('/ensaios', ensaioRouter);
 routes.use('/eventos', eventoRouter);
 routes.use('/favoritos', favoritosRouter);

@@ -1,13 +1,18 @@
 import express from "express";
 import notificacaoService from "../services/notificacoesservices.js";
 import db from "../repository/connection.js";
+import { requireSelf, requireGroupLeader } from '../middlewares/authorize.js';
 
 const route = express.Router();
 
 /**
  * 📢 Criar notificação global (equipe dev)
  */
-route.post('/global', async (req, res) => {
+route.post('/global', (req, res, next) => {
+  const admins = (process.env.AUTH_ADMIN_USER_IDS || '').split(',').map(Number);
+  if (!admins.includes(req.auth.userId)) return res.status(403).json({ message: 'Acesso negado.' });
+  next();
+}, async (req, res) => {
   try {
     const { titulo, mensagem } = req.body;
 
@@ -26,7 +31,7 @@ route.post('/global', async (req, res) => {
 /**
  * 🤝 Convite para grupo
  */
-route.post('/convite', async (req, res) => {
+route.post('/convite', requireGroupLeader(req => req.body.id_grupo), async (req, res) => {
   try {
     const { id_usuario, id_grupo } = req.body;
 
@@ -45,7 +50,7 @@ route.post('/convite', async (req, res) => {
 /**
  * 📅 Notificar evento
  */
-route.post('/evento', async (req, res) => {
+route.post('/evento', requireGroupLeader(req => req.body.id_grupo), async (req, res) => {
   try {
     const { id_grupo, eventoId, titulo } = req.body;
 
@@ -66,7 +71,7 @@ route.post('/evento', async (req, res) => {
 /**
  * 🎵 Notificar ensaio
  */
-route.post('/ensaio', async (req, res) => {
+route.post('/ensaio', requireGroupLeader(req => req.body.id_grupo), async (req, res) => {
   try {
     const { id_grupo, ensaioId, titulo } = req.body;
 
@@ -87,7 +92,7 @@ route.post('/ensaio', async (req, res) => {
 /**
  * 🔔 Listar notificações do usuário
  */
-route.get('/:id_user', async (req, res) => {
+route.get('/:id_user', requireSelf(req => req.params.id_user), async (req, res) => {
   try {
     const { id_user } = req.params;
 
@@ -102,7 +107,7 @@ route.get('/:id_user', async (req, res) => {
 /**
  * ✅ Marcar como lida
  */
-route.put('/:id_notificacao/lida', async (req, res) => {
+route.put('/:id_notificacao/lida', requireSelf(req => req.body.id_user), async (req, res) => {
   try {
     const { id_notificacao } = req.params;
     const { id_user } = req.body;
@@ -122,7 +127,7 @@ route.put('/:id_notificacao/lida', async (req, res) => {
 /**
  * 🔢 Contador de não lidas
  */
-route.get('/:id_user/nao-lidas', async (req, res) => {
+route.get('/:id_user/nao-lidas', requireSelf(req => req.params.id_user), async (req, res) => {
   try {
     const { id_user } = req.params;
 
@@ -134,7 +139,7 @@ route.get('/:id_user/nao-lidas', async (req, res) => {
   }
 });
 
-route.post("/push-token", async (req, res) => {
+route.post("/push-token", requireSelf(req => req.body?.id_user), async (req, res) => {
   try {
     const { token, id_user } = req.body || {};
 

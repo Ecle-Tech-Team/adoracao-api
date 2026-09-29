@@ -123,10 +123,12 @@ async function deleteGrupoPlaylist(id_grupo, playlist_id) {
   }
 }
 
-async function addHinoToPlaylist(playlist_id, hino_id, tipo_hino) {
+async function addHinoToPlaylist(id_grupo, playlist_id, hino_id, tipo_hino) {
   const tipoNormalizado = normalizeTipoHino(tipo_hino);
   const conn = await getConnection();
   try {
+    const [owners] = await conn.execute('SELECT id FROM grupo_playlists WHERE id = ? AND id_grupo = ?', [playlist_id, id_grupo]);
+    if (!owners.length) throw new Error('Playlist não pertence ao grupo');
     const [result] = await conn.execute(
       "INSERT INTO grupo_playlist_hinos (playlist_id, hino_id, tipo_hino) VALUES (?, ?, ?)",
       [playlist_id, hino_id, tipoNormalizado],
@@ -143,9 +145,11 @@ async function addHinoToPlaylist(playlist_id, hino_id, tipo_hino) {
   }
 }
 
-async function removeHinoFromPlaylist(playlist_id, hino_id) {
+async function removeHinoFromPlaylist(id_grupo, playlist_id, hino_id) {
   const conn = await getConnection();
   try {
+    const [owners] = await conn.execute('SELECT id FROM grupo_playlists WHERE id = ? AND id_grupo = ?', [playlist_id, id_grupo]);
+    if (!owners.length) throw new Error('Playlist não pertence ao grupo');
     await conn.execute(
       "DELETE FROM grupo_playlist_hinos WHERE playlist_id = ? AND hino_id = ?",
       [playlist_id, hino_id],
@@ -244,12 +248,12 @@ async function enrichHinoData(hino) {
   }
 }
 
-async function getGrupoPlaylistDetalhes(playlist_id) {
+async function getGrupoPlaylistDetalhes(id_grupo, playlist_id) {
   const conn = await getConnection();
   try {
     const [playlistRows] = await conn.execute(
-      "SELECT * FROM grupo_playlists WHERE id = ?",
-      [playlist_id],
+      "SELECT * FROM grupo_playlists WHERE id = ? AND id_grupo = ?",
+      [playlist_id, id_grupo],
     );
 
     if (playlistRows.length === 0) return null;

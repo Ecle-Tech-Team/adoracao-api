@@ -10,9 +10,17 @@ CREATE TABLE IF NOT EXISTS usuarios (
     id_usuario INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
     nome VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
-    senha VARCHAR(16) NOT NULL,
+    senha VARCHAR(255) NOT NULL,
     data_nasc DATE,
     tipo_usuario ENUM('Adorador', 'Regente', 'Cantor', 'Musico', 'Componente', 'Professor') NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS regentes (
+    regente_id INT PRIMARY KEY AUTO_INCREMENT,
+    usuario_id INT NOT NULL,
+    classificacao_hinos TEXT,
+    classificacao_componentes TEXT,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id_usuario)
 );
 
 CREATE TABLE IF NOT EXISTS grupo (
@@ -21,7 +29,7 @@ CREATE TABLE IF NOT EXISTS grupo (
     local VARCHAR(255) NOT NULL,
     tipo_grupo ENUM('Musical', 'Louvor') NOT NULL,
     regente_id INT UNIQUE NOT NULL,
-    FOREIGN KEY (regente_id) REFERENCES usuarios(id_usuario)
+    FOREIGN KEY (regente_id) REFERENCES regentes(regente_id)
 );
 
 CREATE TABLE IF NOT EXISTS hinario_grupo (
@@ -62,14 +70,6 @@ CREATE TABLE IF NOT EXISTS cantores (
     id INT PRIMARY KEY AUTO_INCREMENT,
     usuario_id INT NOT NULL,
     classificacao INT,
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id_usuario)
-);
-
-CREATE TABLE IF NOT EXISTS regentes (
-    regente_id INT PRIMARY KEY AUTO_INCREMENT,
-    usuario_id INT NOT NULL,
-    classificacao_hinos TEXT,
-    classificacao_componentes TEXT,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id_usuario)
 );
 
@@ -146,6 +146,20 @@ CREATE TABLE IF NOT EXISTS push_tokens (
     atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY unique_usuario_token (id_usuario),
     FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS auth_sessions (
+    id CHAR(36) PRIMARY KEY,
+    user_id INT NOT NULL,
+    refresh_hash CHAR(64) NOT NULL,
+    previous_refresh_hash CHAR(64) NULL,
+    previous_refresh_valid_until DATETIME NULL,
+    persistent BOOLEAN NOT NULL DEFAULT TRUE,
+    expires_at DATETIME NOT NULL,
+    revoked_at DATETIME NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
+    INDEX idx_auth_sessions_user (user_id)
 );
 
 ALTER TABLE usuarios

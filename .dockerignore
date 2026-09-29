@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+node_modules
+npm-debug.log*
+yarn-error.log*
+.git
+.expo
+coverage
+test

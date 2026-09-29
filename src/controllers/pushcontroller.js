@@ -1,9 +1,10 @@
 import express from 'express';
 import pushService from '../services/pushservices.js';
+import { requireSelf } from '../middlewares/authorize.js';
 
 const route = express.Router();
 
-route.post('/', async (req, res) => {
+route.post('/', requireSelf(req => req.body?.id_user), async (req, res) => {
   try {
     const { token, id_user } = req.body;
 

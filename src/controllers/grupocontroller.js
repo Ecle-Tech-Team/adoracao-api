@@ -1,24 +1,24 @@
 import express from "express";
 import groupService, { removeHinoFromGrupo, deleteGroup } from "../services/gruposervices.js";
+import { verifyJWT } from '../middlewares/jwt.js';
+import { requireGroupLeader } from '../middlewares/authorize.js';
 
 const route = express.Router();
 
-route.post('/', async (request, response) => {
+route.post('/', verifyJWT, async (request, response) => {
   try {
-    const { name, local, typeGroup, regenteId } = request.body;
+    const { name, local, typeGroup } = request.body;
 
-    if (!name || !local || !typeGroup || !regenteId) {
+    if (!name || !local || !typeGroup) {
       return response.status(400).json({ message: "Todos os campos são obrigatórios." });
     }
 
-    const grupoId = await groupService.createGroup(name, local, typeGroup, regenteId);
+    const grupoId = await groupService.createGroup(name, local, typeGroup, request.auth.userId);
     response.status(201).send({ message: 'Grupo criado com sucesso', grupoId });
   } catch (error) {
-      if (error.message === "Este regente já possui um grupo e não pode criar outro.") {
-          response.status(400).send({ message: error.message });
-      } else {
-          response.status(500).send({ message: `Erro na criação do grupo: ${error.message}` });
-      }
+      if (error.code === 'GROUP_CREATION_NOT_ALLOWED') return response.status(403).send({ message: error.message });
+      if (error.code === 'GROUP_ALREADY_EXISTS') return response.status(409).send({ message: error.message });
+      response.status(500).send({ message: `Erro na criação do grupo: ${error.message}` });
   }
 });
 
@@ -31,7 +31,7 @@ route.get('/', async (req, res) => {
   }
 });
 
-route.post('/:id_grupo/hinos', async (req, res) => {
+route.post('/:id_grupo/hinos', verifyJWT, requireGroupLeader(req => req.params.id_grupo), async (req, res) => {
   try {
     const { id_grupo } = req.params;
     const { hinoId, tag } = req.body;
@@ -66,18 +66,17 @@ route.get('/:id', async (req, res) => {
   }
 });
 
-route.delete('/:id_grupo', async (req, res) => {
+route.delete('/:id_grupo', verifyJWT, requireGroupLeader(req => req.params.id_grupo), async (req, res) => {
   try {
     const { id_grupo } = req.params;
-    const { regenteId } = req.body;
-    const result = await deleteGroup(id_grupo, regenteId);
+    const result = await deleteGroup(id_grupo, req.auth.userId);
     res.status(200).send(result);
   } catch (error) {
     res.status(500).send({ message: `Erro ao excluir grupo: ${error.message}` });
   }
 });
 
-route.delete('/:id_grupo/hinos/:id_hino', async (req, res) => {
+route.delete('/:id_grupo/hinos/:id_hino', verifyJWT, requireGroupLeader(req => req.params.id_grupo), async (req, res) => {
   try {
     const { id_grupo, id_hino } = req.params;
     const result = await removeHinoFromGrupo(id_grupo, id_hino);
@@ -87,7 +86,7 @@ route.delete('/:id_grupo/hinos/:id_hino', async (req, res) => {
   }
 });
 
-route.put('/:id_grupo/hinos/:hinoId/tag', async (req, res) => {
+route.put('/:id_grupo/hinos/:hinoId/tag', verifyJWT, requireGroupLeader(req => req.params.id_grupo), async (req, res) => {
   try {
     const { id_grupo, hinoId } = req.params;
     const { tag } = req.body;

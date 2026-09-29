@@ -1,21 +1,37 @@
 import db from '../repository/connection.js'
+import { hashPassword } from './passwords.js';
+import { revokeAllSessions } from './authservices.js';
 
 async function createUser(name, email, password, typeUser, birthDate, hinario, igreja){
+  if (typeof password !== 'string' || password.length < 8) throw new Error('Senha deve ter pelo menos 8 caracteres.');
+  if (typeof name !== 'string' || !name.trim() || typeof email !== 'string' || !email.trim()) {
+    throw new Error('Nome e e-mail são obrigatórios.');
+  }
+  const passwordHash = await hashPassword(password);
   const sql = "INSERT INTO usuarios(nome, email, senha, tipo_usuario, data_nasc, hinario, igreja) VALUES(?,?,?,?,?,?,?)"
 
-  const values = [name, email, password, typeUser, birthDate, hinario || 'HARPA', igreja || '' ];
+  const values = [name, email, passwordHash, 'Adorador', birthDate, hinario || 'HARPA', igreja || '' ];
   const conn = await db.connect();
-  await conn.query(sql, values)
-  conn.end();
+  try {
+    await conn.query(sql, values);
+  } finally { await conn.end(); }
 }
 
 async function updateUser(name, email, password, typeUser, idUser){
-  const sql = "UPDATE usuarios SET nome = ?, email = ?, senha = ?, tipo_usuario = ? WHERE id_usuario = ?"
-  const values = [name, email, password, typeUser, idUser]
+  const changingPassword = typeof password === 'string' && password.length > 0;
+  if (changingPassword && password.length < 8) throw new Error('Senha deve ter pelo menos 8 caracteres.');
+  const sql = changingPassword
+    ? "UPDATE usuarios SET nome = ?, email = ?, senha = ? WHERE id_usuario = ?"
+    : "UPDATE usuarios SET nome = ?, email = ? WHERE id_usuario = ?";
+  const values = changingPassword
+    ? [name, email, await hashPassword(password), idUser]
+    : [name, email, idUser];
 
   const conn = await db.connect()
-  await conn.query(sql, values)
-  conn.end();
+  try {
+    await conn.query(sql, values);
+  } finally { await conn.end(); }
+  if (changingPassword) await revokeAllSessions(idUser);
 }
 
 async function deleteUser(idUser){
@@ -31,7 +47,7 @@ export async function getCandidatosComponente() {
       const sql = `
           SELECT id_usuario, nome, tipo_usuario 
           FROM usuarios 
-          WHERE tipo_usuario IN ('Adorador', 'Cantor', 'Músico')
+          WHERE tipo_usuario IN ('Adorador', 'Cantor', 'Musico')
       `;
       const [rows] = await conn.query(sql);
       return rows;
@@ -60,7 +76,7 @@ export const listarComponentesDoGrupo = async (id_grupo) => {
 export async function adicionarComponenteAoGrupo(idUser, id_grupo) {
   const conn = await db.connect();
   try {      
-    const sql = "UPDATE usuarios SET id_grupo = ?, tipo_usuario = 'Componente' WHERE id_usuario = ? AND (tipo_usuario = 'Adorador' OR tipo_usuario = 'Cantor' OR tipo_usuario = 'Músico')";
+    const sql = "UPDATE usuarios SET id_grupo = ?, tipo_usuario = 'Componente' WHERE id_usuario = ? AND (tipo_usuario = 'Adorador' OR tipo_usuario = 'Cantor' OR tipo_usuario = 'Musico')";
     const [result] = await conn.query(sql, [id_grupo, idUser]);
     return { message: 'Componente adicionado ao grupo com sucesso!' };
   } catch (error) {
@@ -74,14 +90,13 @@ export async function adicionarComponenteAoGrupo(idUser, id_grupo) {
 export const removerComponente = async (idUser, id_grupo) => {
   const conn = await db.connect();
   try {
-    const sql = "UPDATE usuarios SET tipo_usuario = 'Adorador', id_grupo = ? WHERE id_usuario = ? AND tipo_usuario = 'Componente'";
-    const values = [id_grupo, idUser];
+    const sql = "UPDATE usuarios SET tipo_usuario = 'Adorador', id_grupo = NULL WHERE id_usuario = ? AND id_grupo = ? AND tipo_usuario = 'Componente'";
+    const values = [idUser, id_grupo];
     await conn.query(sql, values);
-    conn.end();
   } catch (error) {
     console.error('Erro ao remover componente:', error);
     throw error;
-  }
+  } finally { conn.end(); }
 };
 
 export async function checkEmailExists(email) {

@@ -1,46 +1,53 @@
 import db from '../repository/connection.js';
 import { fetchHinoById } from './dbservices.js';
 
-async function createGroup(name, local, typeGroup, regenteId) {
+function groupError(code, message) {
+    const error = new Error(message);
+    error.code = code;
+    return error;
+}
+
+async function createGroup(name, local, typeGroup, creatorId) {
     const conn = await db.connect();
     try {
-        // Verifica se o regente já possui um grupo
-        const checkGroupSql = "SELECT COUNT(*) AS count FROM grupo WHERE regente_id = ?";
-        const [rows] = await conn.query(checkGroupSql, [regenteId]);
-
-        if (rows[0].count > 0) {
-            throw new Error("Este regente já possui um grupo e não pode criar outro.");
-        }  
-
-        // Verifica se o regente já existe
-        const checkRegenteSql = "SELECT regente_id FROM regentes WHERE usuario_id = ?";
-        const [regenteRows] = await conn.query(checkRegenteSql, [regenteId]);
-
-        let regenteRefId;
-        
-        if (regenteRows.length === 0) {
-            // Se o regente não existe, insere um novo regente
-            const insertRegenteSql = "INSERT INTO regentes (usuario_id) VALUES (?)";
-            const [result] = await conn.query(insertRegenteSql, [regenteId]);
-            regenteRefId = result.insertId;
-        } else {
-            // Caso o regente já exista, obtém seu ID
-            regenteRefId = regenteRows[0].regente_id;
+        await conn.beginTransaction();
+        const [users] = await conn.query(
+            "SELECT id_usuario, tipo_usuario, id_grupo FROM usuarios WHERE id_usuario = ? FOR UPDATE",
+            [creatorId]
+        );
+        const creator = users[0];
+        if (!creator) throw groupError('GROUP_CREATION_NOT_ALLOWED', 'Usuário não encontrado.');
+        if (creator.id_grupo != null) throw groupError('GROUP_ALREADY_EXISTS', 'Este regente já possui um grupo e não pode criar outro.');
+        if (!['Adorador', 'Regente'].includes(creator.tipo_usuario)) {
+            throw groupError('GROUP_CREATION_NOT_ALLOWED', 'Seu perfil não pode criar um grupo.');
         }
 
-        // Insere o novo grupo
+        const [regenteRows] = await conn.query(
+            "SELECT regente_id FROM regentes WHERE usuario_id = ? FOR UPDATE",
+            [creatorId]
+        );
+        let regenteRefId = regenteRows[0]?.regente_id;
+        if (!regenteRefId) {
+            const [result] = await conn.query("INSERT INTO regentes (usuario_id) VALUES (?)", [creatorId]);
+            regenteRefId = result.insertId;
+        }
+
+        const [groups] = await conn.query("SELECT id FROM grupo WHERE regente_id = ? FOR UPDATE", [regenteRefId]);
+        if (groups.length) throw groupError('GROUP_ALREADY_EXISTS', 'Este regente já possui um grupo e não pode criar outro.');
+
         const sql = "INSERT INTO grupo (nome, local, tipo_grupo, regente_id) VALUES (?, ?, ?, ?)";
         const values = [name, local, typeGroup, regenteRefId];
         const [groupResult] = await conn.query(sql, values);
         const groupId = groupResult.insertId;
-        
-        // Atualiza o usuário 'Regente' com o ID do grupo recém-criado
-        const updateUserGroupSql = "UPDATE usuarios SET id_grupo = ? WHERE id_usuario = ?";
-        await conn.query(updateUserGroupSql, [groupId, regenteId]);
-                
-        // Retorna o ID do grupo criado
+
+        await conn.query(
+            "UPDATE usuarios SET tipo_usuario = 'Regente', id_grupo = ? WHERE id_usuario = ?",
+            [groupId, creatorId]
+        );
+        await conn.commit();
         return groupId;
     } catch (error) {
+        await conn.rollback();
         throw error;
     } finally {
         conn.end();
@@ -162,18 +169,22 @@ export const updateHinoTag = async (id_grupo, hinoId, tag) => {
 export const deleteGroup = async (id_grupo, regenteId) => {
     const conn = await db.connect();
     try {
+        await conn.beginTransaction();
+        const [owned] = await conn.query(
+            "SELECT g.id FROM grupo g JOIN regentes r ON r.regente_id = g.regente_id WHERE g.id = ? AND r.usuario_id = ? FOR UPDATE",
+            [id_grupo, regenteId]
+        );
+        if (!owned.length) throw new Error("Grupo não encontrado ou você não tem permissão para excluí-lo.");
         // Remove hinos do grupo
         await conn.query("DELETE FROM hinario_grupo WHERE grupo_id = ?", [id_grupo]);
         // Remove os componentes do grupo (atualiza usuarios) e altera tipo para 'Adorador'
         await conn.query("UPDATE usuarios SET id_grupo = NULL, tipo_usuario = 'Adorador' WHERE id_grupo = ?", [id_grupo]);
         // Remove o grupo
-        const sql = "DELETE FROM grupo WHERE id = ? AND regente_id IN (SELECT regente_id FROM regentes WHERE usuario_id = ?)";
-        const [result] = await conn.query(sql, [id_grupo, regenteId]);
-        if (result.affectedRows === 0) {
-            throw new Error("Grupo não encontrado ou você não tem permissão para excluí-lo.");
-        }
+        await conn.query("DELETE FROM grupo WHERE id = ?", [id_grupo]);
+        await conn.commit();
         return { message: 'Grupo excluído com sucesso' };
     } catch (error) {
+        await conn.rollback();
         throw error;
     } finally {
         conn.end();

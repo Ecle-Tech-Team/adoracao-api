@@ -20,6 +20,7 @@ route.post('/', async (req, res, next) => {
       accessToken: token, expiresIn: ACCESS_SECONDS,
       id_user: user.id_usuario, userType: user.tipo_usuario,
       id_grupo: user.id_grupo ?? null,
+      id_igreja: user.id_igreja ?? null,
       user,
       ...(clientType === 'mobile' ? { refreshToken: session.refreshToken } : {}),
     });

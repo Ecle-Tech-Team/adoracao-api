@@ -18,7 +18,7 @@ route.post('/', verifyJWT, async (request, response) => {
   } catch (error) {
       if (error.code === 'GROUP_CREATION_NOT_ALLOWED') return response.status(403).send({ message: error.message });
       if (error.code === 'GROUP_ALREADY_EXISTS') return response.status(409).send({ message: error.message });
-      response.status(500).send({ message: `Erro na criação do grupo: ${error.message}` });
+      response.status(500).send({ message: 'Erro interno ao criar grupo.' });
   }
 });
 

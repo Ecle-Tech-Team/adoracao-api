@@ -15,6 +15,24 @@ CREATE TABLE IF NOT EXISTS usuarios (
     tipo_usuario ENUM('Adorador', 'Regente', 'Cantor', 'Musico', 'Componente', 'Professor') NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS igrejas (
+    id_igreja INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(150) NOT NULL,
+    nome_normalizado VARCHAR(150) NOT NULL,
+    cidade VARCHAR(100) NULL,
+    estado VARCHAR(2) NULL,
+    endereco VARCHAR(255) NULL,
+    cep VARCHAR(10) NULL,
+    ativa BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_igreja_nome_normalizado (nome_normalizado)
+);
+
+ALTER TABLE usuarios ADD COLUMN id_igreja INT NULL,
+    ADD INDEX idx_usuario_id_igreja (id_igreja),
+    ADD CONSTRAINT fk_usuarios_igreja FOREIGN KEY (id_igreja) REFERENCES igrejas(id_igreja);
+
 CREATE TABLE IF NOT EXISTS regentes (
     regente_id INT PRIMARY KEY AUTO_INCREMENT,
     usuario_id INT NOT NULL,
@@ -29,7 +47,10 @@ CREATE TABLE IF NOT EXISTS grupo (
     local VARCHAR(255) NOT NULL,
     tipo_grupo ENUM('Musical', 'Louvor') NOT NULL,
     regente_id INT UNIQUE NOT NULL,
-    FOREIGN KEY (regente_id) REFERENCES regentes(regente_id)
+    id_igreja INT NULL,
+    INDEX idx_grupo_id_igreja (id_igreja),
+    FOREIGN KEY (regente_id) REFERENCES regentes(regente_id),
+    CONSTRAINT fk_grupo_igreja FOREIGN KEY (id_igreja) REFERENCES igrejas(id_igreja)
 );
 
 CREATE TABLE IF NOT EXISTS hinario_grupo (

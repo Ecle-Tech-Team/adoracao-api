@@ -1,5 +1,7 @@
 import express, { request, response } from "express";
 import db, { getCandidatosComponente, listarComponentesDoGrupo, adicionarComponenteAoGrupo, removerComponente, checkEmailExists, listarIgrejas, updateUserGrupo } from '../services/userservices.js';
+import { verifyJWT } from '../middlewares/jwt.js';
+import { authorizeComponentRemoval, requireSelf, requireGroupLeader, requireGroupMember, requireRegente } from '../middlewares/authorize.js';
 
 const route = express.Router();
 
@@ -11,12 +13,16 @@ route.post('/', async (request, response) => {
 
     response.status(201).json({ message: 'Salvo com sucesso' });
   } catch (error) {
+    if (error.code === 'ER_DUP_ENTRY') return response.status(409).json({ message: 'E-mail já cadastrado.' });
+    if (error.message === 'Senha deve ter pelo menos 8 caracteres.' || error.message === 'Nome e e-mail são obrigatórios.') {
+      return response.status(400).json({ message: error.message });
+    }
     console.error(error);
     response.status(500).json({ message: 'Erro na requisição' });
   }
 });
 
-route.put('/', async(request, response) => {
+route.put('/', verifyJWT, requireSelf(req => req.body.idUser), async(request, response) => {
   try{
     const {name, email, password, typeUser, idUser} = request.body;
     await db.updateUser(name, email, password, typeUser, idUser);
@@ -26,7 +32,7 @@ route.put('/', async(request, response) => {
   }
 });
 
-route.delete('/:idUser', async(request, response) => {
+route.delete('/:idUser', verifyJWT, requireSelf(req => req.params.idUser), async(request, response) => {
   try{
     const {idUser} = request.params
     await db.deleteUser(idUser) 
@@ -35,7 +41,7 @@ route.delete('/:idUser', async(request, response) => {
     response.status(500).send({message:`Erro na requisição  `})
   }
 });
-route.get('/componentes', async (req, res) => {
+route.get('/componentes', verifyJWT, requireRegente, async (req, res) => {
   try {
       const candidatos = await getCandidatosComponente();
       res.status(200).json(candidatos);
@@ -55,7 +61,7 @@ route.get('/check-email/:email', async (request, response) => {
   }
 });
 
-route.get('/grupo/:id_grupo/componentes', async (req, res) => {
+route.get('/grupo/:id_grupo/componentes', verifyJWT, requireGroupMember(req => req.params.id_grupo), async (req, res) => {
   const { id_grupo } = req.params;
   try {
     const componentes = await listarComponentesDoGrupo(id_grupo);
@@ -65,7 +71,7 @@ route.get('/grupo/:id_grupo/componentes', async (req, res) => {
   }
 });
 
-route.post('/addComponente/:idUser/:id_grupo', async (req, res) => {
+route.post('/addComponente/:idUser/:id_grupo', verifyJWT, requireGroupLeader(req => req.params.id_grupo), async (req, res) => {
   const { idUser, id_grupo } = req.params;
 
   try {
@@ -77,12 +83,11 @@ route.post('/addComponente/:idUser/:id_grupo', async (req, res) => {
   }
 });
 
-route.put('/removeComponente/:idUser', async (req, res) => {
+route.put('/removeComponente/:idUser', verifyJWT, authorizeComponentRemoval, async (req, res) => {
   const { idUser } = req.params;
-  const { id_grupo } = req.body;
 
   try {
-    await removerComponente(idUser, id_grupo);
+    await removerComponente(idUser, req.componentGroupId);
     res.status(200).send({ message: 'Componente removido com sucesso!' });
   } catch (error) {
     console.error('Erro ao remover componente:', error);
@@ -90,10 +95,11 @@ route.put('/removeComponente/:idUser', async (req, res) => {
   }
 });
 
-route.put('/:id_user/grupo', async (request, response) => {
+route.put('/:id_user/grupo', verifyJWT, requireSelf(req => req.params.id_user), async (request, response) => {
   try {
     const { id_user } = request.params;
     const { id_grupo } = request.body;
+    if (id_grupo != null) return response.status(403).json({ message: 'Entrada em grupo exige convite.' });
     await updateUserGrupo(id_user, id_grupo);
     response.status(200).send({ message: 'Grupo do usuário atualizado com sucesso!' });
   } catch (error) {

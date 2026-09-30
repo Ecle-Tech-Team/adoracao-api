@@ -1,6 +1,8 @@
 import express from 'express';
 
 import loginUser from './controllers/logincontroller.js';
+import authController from './controllers/authcontroller.js';
+import { verifyJWT } from './middlewares/jwt.js';
 import routerUser from './controllers/usercontroller.js';
 import grupoController from './controllers/grupocontroller.js';
 import grupoPlaylistController from './controllers/grupoPlaylistController.js';
@@ -27,6 +29,7 @@ const routes = express.Router();
 
 /* 🔐 Auth & users */
 routes.use('/login', loginUser);
+routes.use('/auth', authController);
 routes.use('/user', routerUser);
 
 /* 🏗️ Core */
@@ -38,10 +41,10 @@ routes.use('/grupo', grupoHinoController);
 
 routes.use('/ensaios', ensaioRouter);
 routes.use('/eventos', eventoRouter);
-routes.use('/favoritos', favoritosRouter);
-routes.use('/notificacoes', notificacoesRouter);
-routes.use('/push-token', pushController);
-routes.use('/playlists', playlistRouter);
+routes.use('/favoritos', verifyJWT, favoritosRouter);
+routes.use('/notificacoes', verifyJWT, notificacoesRouter);
+routes.use('/push-token', verifyJWT, pushController);
+routes.use('/playlists', verifyJWT, playlistRouter);
 
 /* 📧 E-mail verification */
 routes.use('/email', emailRouter);

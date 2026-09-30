@@ -1,9 +1,11 @@
 import express from 'express';
 import { createEventos, getEventosDoGrupo, updateEvento, removeEvento } from '../services/eventosservices.js';
+import { verifyJWT } from '../middlewares/jwt.js';
+import { requireGroupLeader, requireGroupMember, requireResourceLeader } from '../middlewares/authorize.js';
 
 const route = express.Router();
 
-route.post('/:id_grupo', async (req, res) => {
+route.post('/:id_grupo', verifyJWT, requireGroupLeader(req => req.params.id_grupo), async (req, res) => {
     const { id_grupo } = req.params;
     const { data, descricao, local, hinoIds } = req.body;
 
@@ -16,7 +18,7 @@ route.post('/:id_grupo', async (req, res) => {
 });
 
 
-route.get('/:id_grupo', async (req, res) => {
+route.get('/:id_grupo', verifyJWT, requireGroupMember(req => req.params.id_grupo), async (req, res) => {
     try {
         const { id_grupo } = req.params;
         const ensaios = await getEventosDoGrupo(id_grupo);
@@ -26,7 +28,7 @@ route.get('/:id_grupo', async (req, res) => {
     }
 });
 
-route.put('/:id', async (req, res) => {
+route.put('/:id', verifyJWT, requireResourceLeader('eventos_grupo', req => req.params.id), async (req, res) => {
     const { id } = req.params;
     const { data, descricao, local } = req.body;
 
@@ -38,7 +40,7 @@ route.put('/:id', async (req, res) => {
     }
 });
 
-route.delete('/:id', async (req, res) => {
+route.delete('/:id', verifyJWT, requireResourceLeader('eventos_grupo', req => req.params.id), async (req, res) => {
     const { id } = req.params;
 
     try {

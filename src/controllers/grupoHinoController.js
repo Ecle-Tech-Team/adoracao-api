@@ -1,4 +1,6 @@
 import express from "express";
+import { verifyJWT } from '../middlewares/jwt.js';
+import { requireGroupLeader } from '../middlewares/authorize.js';
 
 import {
   getProgramacaoHino,
@@ -102,7 +104,7 @@ router.get("/hinos", async (req, res) => {
  * POST /grupo/:idGrupo/hino
  * =====================================================
  */
-router.post("/:idGrupo/hino", async (req, res) => {
+router.post("/:idGrupo/hino", verifyJWT, requireGroupLeader(req => req.params.idGrupo), async (req, res) => {
   try {
     const { idGrupo } = req.params;
 
@@ -187,7 +189,7 @@ router.post("/:idGrupo/hino", async (req, res) => {
  * DELETE /grupo/:idGrupo/hino?data=2026-09-22
  * =====================================================
  */
-router.delete("/:idGrupo/hino", async (req, res) => {
+router.delete("/:idGrupo/hino", verifyJWT, requireGroupLeader(req => req.params.idGrupo), async (req, res) => {
   try {
     const { idGrupo } = req.params;
     const { data } = req.query;

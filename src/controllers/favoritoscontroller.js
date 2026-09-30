@@ -1,7 +1,9 @@
 import express from 'express';
 import { addFavorito, removeFavorito, getFavoritos } from '../services/favoritosservices.js';
+import { requireSelf } from '../middlewares/authorize.js';
 
 const router = express.Router();
+router.use(requireSelf(req => req.params.id_user || req.path.split('/')[1]));
 
 router.get('/:id_user', async (req, res) => {
     try {

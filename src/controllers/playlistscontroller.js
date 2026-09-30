@@ -9,11 +9,12 @@ import {
   removeHinoFromPlaylist,
   getPlaylistHinos,
 } from '../services/playlistservices.js';
+import { requireSelf } from '../middlewares/authorize.js';
 
 const router = express.Router();
 
 // Criar playlist
-router.post('/', async (req, res) => {
+router.post('/', requireSelf(req => req.body.userId), async (req, res) => {
   try {
     const { userId, nome, descricao } = req.body;
     if (!userId || !nome) {
@@ -27,7 +28,7 @@ router.post('/', async (req, res) => {
 });
 
 // Listar playlists do usuário
-router.get('/:userId', async (req, res) => {
+router.get('/:userId', requireSelf(req => req.params.userId), async (req, res) => {
   try {
     const { userId } = req.params;
     const playlists = await getUserPlaylists(userId);
@@ -38,7 +39,7 @@ router.get('/:userId', async (req, res) => {
 });
 
 // Obter playlist com hinos
-router.get('/:userId/:id', async (req, res) => {
+router.get('/:userId/:id', requireSelf(req => req.params.userId), async (req, res) => {
   try {
     const { userId, id } = req.params;
     const playlist = await getPlaylistById(id, userId);
@@ -53,7 +54,7 @@ router.get('/:userId/:id', async (req, res) => {
 });
 
 // Atualizar playlist
-router.put('/:id', async (req, res) => {
+router.put('/:id', requireSelf(req => req.body.userId), async (req, res) => {
   try {
     const { id } = req.params;
     const { userId, nome, descricao } = req.body;
@@ -68,7 +69,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Deletar playlist
-router.delete('/:userId/:id', async (req, res) => {
+router.delete('/:userId/:id', requireSelf(req => req.params.userId), async (req, res) => {
   try {
     const { userId, id } = req.params;
     await deletePlaylist(id, userId);
@@ -79,7 +80,7 @@ router.delete('/:userId/:id', async (req, res) => {
 });
 
 // Adicionar hino à playlist
-router.post('/:id/hinos', async (req, res) => {
+router.post('/:id/hinos', requireSelf(req => req.body.userId), async (req, res) => {
   try {
     const { id } = req.params;
     const { userId, hinoId, tipoHino } = req.body;
@@ -97,7 +98,7 @@ router.post('/:id/hinos', async (req, res) => {
 });
 
 // Remover hino da playlist
-router.delete('/:userId/:id/hinos/:hinoId/:tipoHino', async (req, res) => {
+router.delete('/:userId/:id/hinos/:hinoId/:tipoHino', requireSelf(req => req.params.userId), async (req, res) => {
   try {
     const { userId, id, hinoId, tipoHino } = req.params;
     await removeHinoFromPlaylist(id, userId, hinoId, tipoHino);

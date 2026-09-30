@@ -1,24 +1,32 @@
-import jwt from 'jsonwebtoken';
+import { verifyAccessToken } from '../helpers/userFeatures.js';
+import { getActiveSession } from '../services/authservices.js';
 
-function verifyJWT(request, response, next){
-  const secret = '1501222724';
-
-  const authHeader = request.header.authorization;
-  if(!authHeader) return response.status(401).send({message: 'Token não informado!'});
-
-  const parts = authHeader.split(' ');
-  if(parts.lenght !== 2) return response.status(401).send({message: 'Token inválido!'});
-
-  const [scheme, token] = parts;
-  if(!/^Bearer$/i.test(scheme)) return response.status(401).send({message: 'Token inválido'});
-
-  jwt.verify(token, secret, (err, decoded) => {
-    if(err){
-      return response.status(401).send({message: 'Usuário não atenticado!'});
-    }
-    request.infoUser = decoded.infoUser;
-    return next();
-  });
+export async function readAccessAuth(req) {
+  const header = req.get('Authorization');
+  const match = /^Bearer ([^\s]+)$/.exec(header || '');
+  if (!match) return null;
+  let claims;
+  try {
+    claims = verifyAccessToken(match[1]);
+  } catch (error) {
+    if (['JsonWebTokenError', 'TokenExpiredError', 'NotBeforeError'].includes(error.name) || error.message === 'Invalid access token') return null;
+    throw error;
+  }
+  const session = await getActiveSession(claims.sid, claims.sub);
+  if (!session) return null;
+  return { userId: Number(claims.sub), sessionId: claims.sid };
 }
 
-export {verifyJWT};
+export async function verifyJWT(req, res, next) {
+  try {
+    const auth = await readAccessAuth(req);
+    if (!auth) return res.status(401).json({ message: 'Token não informado, inválido ou sessão expirada.' });
+    req.auth = auth;
+    return next();
+  } catch (error) {
+    if (['JsonWebTokenError', 'TokenExpiredError', 'NotBeforeError'].includes(error.name) || error.message === 'Invalid access token') {
+      return res.status(401).json({ message: 'Token inválido ou expirado.' });
+    }
+    return next(error);
+  }
+}

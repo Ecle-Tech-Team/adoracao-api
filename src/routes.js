@@ -5,6 +5,7 @@ import authController from './controllers/authcontroller.js';
 import { verifyJWT } from './middlewares/jwt.js';
 import routerUser from './controllers/usercontroller.js';
 import grupoController from './controllers/grupocontroller.js';
+import igrejaController from './controllers/igrejacontroller.js';
 import grupoPlaylistController from './controllers/grupoPlaylistController.js';
 import ensaioRouter from './controllers/ensaioscontroller.js';
 import eventoRouter from './controllers/eventoscontroller.js';
@@ -34,6 +35,7 @@ routes.use('/user', routerUser);
 
 /* 🏗️ Core */
 routes.use('/grupo', grupoController);
+routes.use('/igrejas', igrejaController);
 routes.use('/grupo', grupoPlaylistController);
 
 /* 🎶 PROJEÇÃO DE GRUPO */

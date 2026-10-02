@@ -5,7 +5,7 @@ export async function loginUser(email, password) {
   if (typeof email !== 'string' || typeof password !== 'string' || !email || !password) return null;
   const conn = await db.connect();
   try {
-    const [rows] = await conn.query('SELECT id_usuario, nome, email, senha, tipo_usuario, id_grupo FROM usuarios WHERE email = ?', [email]);
+    const [rows] = await conn.query('SELECT id_usuario, nome, email, senha, tipo_usuario, id_grupo, id_igreja FROM usuarios WHERE email = ?', [email]);
     const user = rows[0];
     if (!user) return null;
     const checked = await verifyPassword(password, user.senha);

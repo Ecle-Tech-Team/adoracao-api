@@ -12,7 +12,7 @@ async function createGroup(name, local, typeGroup, creatorId) {
     try {
         await conn.beginTransaction();
         const [users] = await conn.query(
-            "SELECT id_usuario, tipo_usuario, id_grupo FROM usuarios WHERE id_usuario = ? FOR UPDATE",
+            "SELECT id_usuario, tipo_usuario, id_grupo, id_igreja FROM usuarios WHERE id_usuario = ? FOR UPDATE",
             [creatorId]
         );
         const creator = users[0];
@@ -35,8 +35,8 @@ async function createGroup(name, local, typeGroup, creatorId) {
         const [groups] = await conn.query("SELECT id FROM grupo WHERE regente_id = ? FOR UPDATE", [regenteRefId]);
         if (groups.length) throw groupError('GROUP_ALREADY_EXISTS', 'Este regente já possui um grupo e não pode criar outro.');
 
-        const sql = "INSERT INTO grupo (nome, local, tipo_grupo, regente_id) VALUES (?, ?, ?, ?)";
-        const values = [name, local, typeGroup, regenteRefId];
+        const sql = "INSERT INTO grupo (nome, local, tipo_grupo, regente_id, id_igreja) VALUES (?, ?, ?, ?, ?)";
+        const values = [name, local, typeGroup, regenteRefId, creator.id_igreja ?? null];
         const [groupResult] = await conn.query(sql, values);
         const groupId = groupResult.insertId;
 

@@ -16,7 +16,7 @@ const newRefresh = sessionId => `${sessionId}.${randomBytes(32).toString('base64
 export async function getUserById(id) {
   const conn = await db.connect();
   try {
-    const [rows] = await conn.query('SELECT id_usuario, nome, email, tipo_usuario, id_grupo FROM usuarios WHERE id_usuario = ?', [id]);
+    const [rows] = await conn.query('SELECT id_usuario, nome, email, tipo_usuario, id_grupo, id_igreja FROM usuarios WHERE id_usuario = ?', [id]);
     return rows[0] || null;
   } finally { await conn.end(); }
 }

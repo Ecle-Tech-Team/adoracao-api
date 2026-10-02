@@ -17,6 +17,7 @@ import playlistRouter from './controllers/playlistscontroller.js';
 import emailRouter from './controllers/emailcontroller.js';
 
 import grupoHinoController from './controllers/grupoHinoController.js';
+import churchSongController from './controllers/churchSongController.js';
 
 import {
   fetchHinos,
@@ -47,6 +48,7 @@ routes.use('/favoritos', verifyJWT, favoritosRouter);
 routes.use('/notificacoes', verifyJWT, notificacoesRouter);
 routes.use('/push-token', verifyJWT, pushController);
 routes.use('/playlists', verifyJWT, playlistRouter);
+routes.use('/hinos-igreja', verifyJWT, churchSongController);
 
 /* 📧 E-mail verification */
 routes.use('/email', emailRouter);
